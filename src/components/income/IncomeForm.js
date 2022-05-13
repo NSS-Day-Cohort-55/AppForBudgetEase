@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { addIncome } from "../../modules/IncomeManager";
+import { getAllBudgetIncome} from "../../modules/IncomeManager"
 import "./Income.css";
 
 export const IncomeForm = () => {
@@ -9,7 +10,7 @@ export const IncomeForm = () => {
 
     const [income, setIncome] = useState({ 
         userId: parseInt(sessionStorage.getItem("AppForBudgetEase_user")), 
-        budgetId: 0, 
+        budgetIncomeId: 0, 
         name: "", 
         description: "", 
         amount: "", 
@@ -17,7 +18,13 @@ export const IncomeForm = () => {
         eventDate: "",
       });
     //empty object
-    const [isLoading, setIsLoading] = useState(true);
+    
+    const [isLoading, setIsLoading] = useState(false);
+    // need the 'getAll' in BudgetIncome to complete this section
+    // builds out a dropdown menu
+    const [budgetIncome, setBudgetIncome] = useState ([]);
+
+
     const navigate = useNavigate();
     const newIncome = { ...income};
     // navi gives ability to change URL
@@ -48,15 +55,36 @@ export const IncomeForm = () => {
     //     setIncome(newIncome);
     //   };
       
+
+    // load budgetIncome data and setState
+    useEffect(() => {
+      getAllBudgetIncome().then((data) => setBudgetIncome(data))
+    }, []);
+
+
       const handleClickSaveIncome = (e) => {
         e.preventDefault(); //prevents browser from submitting form until ready
+
+        const budgetIncomeId = income.budgetIncomeId
+
+   if (budgetIncomeId === 0) {
+     window.alert("Please select a budget income type")
+   } else {
+
         addIncome(newIncome).then(() => navigate("/income"));
       };
+
+   
+    //   invoke addBudget passing budget as an argument
+    //  once comeplet, change the url and display the income list
+   }
+
+
 
       return (
           <>
            <form className="incomeForm">
-        <h3 className="incomeForm__title">[ Create New Income Form ]</h3>
+        <h3 className="incomeForm__title"><strong> Create New Income Form </strong></h3>
         {/* <fieldset> */}
           {/* <div className="form-group">
             <label htmlFor="BudgetId"> BudgetId:</label>
@@ -103,6 +131,19 @@ export const IncomeForm = () => {
           </div>
         </fieldset>
         <fieldset>
+        <div className="form-group">
+					<label htmlFor="location">Assign Income Budget Type: </label>
+					<select value={income.budgetIncomeId} name="budgetIncomeId" id="budgetIncomeId" onChange={handleControlledInputChange} className="form-control" >
+						<option value="0">Select an income budget type</option>
+						{budgetIncome.map(budgetIncome => (
+							<option key={budgetIncome.id} value={budgetIncome.id}>
+								{budgetIncome.name}
+							</option>
+						))}
+					</select>
+				</div>
+        </fieldset>
+        <fieldset>
           <div className="form-group">
             <label htmlFor="amount"> Income Amount: $ </label>
             <input
@@ -120,7 +161,7 @@ export const IncomeForm = () => {
         <fieldset>
           <div className="form-group">
             <label htmlFor="eventDate"> Income Event Date:</label>
-            <input placeholder="DD-MM-YY"
+            <input placeholder="YY-MM-DD"
               type="date"
               id="eventDate"
               onChange={handleControlledInputChange}
